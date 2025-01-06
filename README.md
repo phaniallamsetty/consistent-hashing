@@ -8,3 +8,4 @@ The address space is represented by the class HashingRing. The class supports th
 - **removeNode()** : Deletes a server and its virtual nodes. If the node being requested to delete is a virtual node, only the virtual node is deleted. The method also redistributes any existing pieces of data which might be affected due to the removal of the current server or the virtual node.
 - **get()** : Returns the data present in a given node. The given node is passed as an input parameter.
 - **saveData()** : Saves the data in the appropriate node based on the hashing algorithm and the virtual node mapping logic.
+- **displayRingState()** : Prints the current node, not type, and the data stored in that node in a readable format.
