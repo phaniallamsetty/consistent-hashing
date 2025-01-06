@@ -11,6 +11,8 @@ public class ConsistentHashingTest {
     public void testAddNode1() {
         ch = new ConsistentHashing(3, 4);
         ch.displayRingState();
-        assertEquals(3, ch.getRingItemCount());
+        System.out.println();
+        ch.displayVirtualToServerMapping();
+        assertEquals(15, ch.getRingItemCount());
     }
 }

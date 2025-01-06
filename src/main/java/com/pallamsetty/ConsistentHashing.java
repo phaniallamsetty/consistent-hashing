@@ -16,32 +16,45 @@ import com.google.gson.Gson;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
 import java.util.TreeMap;
 
 public class ConsistentHashing {
     private TreeMap<String, HashRingItem> hashRing;
+    private TreeMap<String, String> virtualToServerMap;
     private int servers;
     private int virtualNodesPerServer;
 
 
     public ConsistentHashing(int servers, int virtualNodesPerServer) {
         hashRing = new TreeMap<>();
+        virtualToServerMap = new TreeMap<>();
         this.servers = servers;
         this.virtualNodesPerServer = virtualNodesPerServer;
 
         for(int i = 0; i < servers; i++) {
-            addNode("server", i, null);
+            String serverHash = addServer("server", i, null);
+
+            for(int j = 0; j < virtualNodesPerServer; j++) {
+                addVirtualNode("virtual", j, null, serverHash);
+            }
         }
     }
 
-    public void addNode(String nodeType, int index, String name) {
-        String fullName = getFullNodeName(nodeType, index, name);
-        String nodeNameHash = getSHA1Hash(fullName);
-        hashRing.put(nodeNameHash, new HashRingItem(nodeType, nodeNameHash, fullName));
+    public String addServer(String nodeType, int index, String name) {
+        String fullName = getFullServerName(nodeType, index, name);
+        String serverNameHash = getSHA1Hash(fullName);
+        hashRing.put(serverNameHash, new HashRingItem(nodeType, serverNameHash, fullName));
+        return serverNameHash;
     }
 
-    private String getFullNodeName(String nodeType, int index, String name) {
+    public void addVirtualNode(String nodeType, int index, String name, String serverHash) {
+        String fullName = getFullVirtualNodeName(nodeType, index, name, serverHash);
+        String virtualNodeHash = getSHA1Hash(fullName);
+        hashRing.put(virtualNodeHash, new HashRingItem(nodeType, virtualNodeHash, fullName));
+        virtualToServerMap.put(serverHash, virtualNodeHash);
+    }
+
+    private String getFullServerName(String nodeType, int index, String name) {
         StringBuilder sb = new StringBuilder();
         if(name != null) {
             sb.append(name);
@@ -51,6 +64,22 @@ public class ConsistentHashing {
         sb.append(nodeType);
         sb.append('_');
         sb.append(index);
+
+        return sb.toString();
+    }
+
+    private String getFullVirtualNodeName(String nodeType, int index, String name, String serverHash) {
+        StringBuilder sb = new StringBuilder();
+        if(name != null) {
+            sb.append(name);
+            sb.append('_');
+        }
+
+        sb.append(nodeType);
+        sb.append('_');
+        sb.append(index);
+        sb.append('_');
+        sb.append(serverHash);
 
         return sb.toString();
     }
@@ -70,6 +99,12 @@ public class ConsistentHashing {
     public void displayRingState() {
         Gson gson = new Gson();
         String json = gson.toJson(hashRing);
+        System.out.println(json);
+    }
+
+    public void displayVirtualToServerMapping() {
+        Gson gson = new Gson();
+        String json = gson.toJson(virtualToServerMap);
         System.out.println(json);
     }
 
